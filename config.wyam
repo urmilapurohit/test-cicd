@@ -1,0 +1,6 @@
+Settings["Title"] = "Cloud 5 minutes";
+Settings["Description"] = "Cloud, cloud cloud!";
+Settings["Intro"] = "Always more cloud!";
+
+Settings[Keys.LinkHideExtensions] = false;
+Settings[Keys.LinksUseHttps] = true;
