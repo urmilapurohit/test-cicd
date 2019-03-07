@@ -1,0 +1,31 @@
+
+trigger:
+- master
+
+variables:
+  DOTNET_SDK_VERSION: '2.1.401'
+
+pool:
+  vmImage: 'VS2017-Win2016'
+
+steps:
+- task: DotNetCoreInstaller@0
+  displayName: 'Use .NET Core SDK $(DOTNET_SDK_VERSION)'
+  inputs:
+    version: '$(DOTNET_SDK_VERSION)'
+
+- powershell: ./build.ps1
+  displayName: 'Execute Cake PowerShell Bootstrapper'
+
+- task: CopyFiles@2
+  displayName: 'Copy generated content'
+  inputs: 
+    SourceFolder: '$(Build.SourcesDirectory)/output'
+    contents: '**\*' 
+    targetFolder: $(Build.ArtifactStagingDirectory)/outpout
+    cleanTargetFolder: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
