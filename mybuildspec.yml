@@ -5,13 +5,11 @@ phases:
       nodejs: 10
   pre_build:
     commands:
-      - npm install
-      - apt-get update
       - echo Nothing to do in the pre_build phase...
   build:
     commands:
       - echo Build started on `date`
-      - mvn test
+      - NOTHING TO BUILD AS IT IS TEST PIPELINE
   post_build:
     commands:
       - echo Build completed on `date`
