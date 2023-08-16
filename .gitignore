@@ -1,4 +1,6 @@
 # Logs
+main.yml
+mybuildspec
 logs
 *.log
 npm-debug.log*
