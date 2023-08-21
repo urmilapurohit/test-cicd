@@ -6,12 +6,9 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - aws s3api put-bucket-acl --bucket ${S3_BUCKET} --grant-read uri=http://acs.amazonaws.com/groups/global/AllUsers # --grant-full-control id=035d0324bb65611f8dfb65623d75b3d04ff3f5cb06902df9c8eaff27be1d04a0
+      - aws s3api put-bucket-acl --bucket ${S3_BUCKET} --grant-read uri=http://acs.amazonaws.com/groups/global/AllUsers 
       - NOTHING TO BUILD AS IT IS TEST PIPELINE
   artifacts:
   files:
     - "**/*"                   # to get all files of  GITHUB repo in s3 bicket
-
-
-
 # aws s3api put-bucket-acl --bucket test-buck-acl --grant-read uri=http://acs.amazonaws.com/groups/global/AllUsers --grant-full-control id=035d0324bb65611f8dfb65623d75b3d04ff3f5cb06902df9c8eaff27be1d04a0
