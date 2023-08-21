@@ -3,18 +3,12 @@ phases:
   install:
     runtime-versions:
       nodejs: 10
-  pre_build:
-    commands:
-      - echo Nothing to do in the pre_build phase...
   build:
     commands:
       - echo Build started on `date`
       - aws s3api put-bucket-acl --bucket ${S3_BUCKET} --grant-read uri=http://acs.amazonaws.com/groups/global/AllUsers # --grant-full-control id=035d0324bb65611f8dfb65623d75b3d04ff3f5cb06902df9c8eaff27be1d04a0
       - NOTHING TO BUILD AS IT IS TEST PIPELINE
-  post_build:
-    commands:
-      - echo Build completed on `date`
-artifacts:
+  artifacts:
   files:
     - "**/*"                   # to get all files of  GITHUB repo in s3 bicket
 
