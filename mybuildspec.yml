@@ -7,7 +7,7 @@ phases:
     commands:
       - echo Build started on `date`
       - ID= aws s3api list-buckets --query Owner.ID --output text
-      - aws s3api put-bucket-acl --bucket ${S3_BUCKET} --acl bucket-owner-full-control --acl public-read   # to give acl to website bucket
+      - aws s3api put-bucket-acl --bucket ${S3_BUCKET} --acl bucket-owner-full-control --acl public-read   # to give acl to website bucket, set environmet variable in codebuild S3_BUCKET
       - echo NOTHING TO BUILD AS IT IS TEST PIPELINE
 artifacts:
   files:
