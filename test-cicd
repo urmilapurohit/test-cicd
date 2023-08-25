@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ClientName:
+    Description: Client name that will be used for resource names
+    Default: "myclient"
+    Type: String
+    MinLength: "3"
+    MaxLength: "12"
+    #AllowedPattern: "[a-z]+"
+  EnvironmentName:
+    Description: An environment name that will be used for resource names
+    Default: "MyEnv"
+    Type: String
+  DomainName:
+    Default: "urmilapurohit.com"
+    Type: String
+  BranchName:
+    Description: Branch Name used for build
+    Default: main
+    Type: String
+  Username:
+    Description: Username of GITHUB
+    Default: urmilapurohit
+    Type: String
+  Password: 
+    Description: Password
+    Default: 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
+    Type: String
+
+
+Resources:
+  GithubSourceCredential:
+    Type: "AWS::CodeBuild::SourceCredential"
+    Properties:
+      ServerType: GITHUB
+      Username: !Ref Username
+      Token: !Ref Password
+      AuthType: PERSONAL_ACCESS_TOKEN
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub CodeBuildRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: "code-build-access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"
+  
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "CodePipelineRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: "code-pipeline-access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"
+
+  CloudFormationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "cloudFormationRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "cloudformation.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: CloudFormation-Role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"
+
+
+  ArtifactStoreS3Bucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: my-devops-artifacts
+      VersioningConfiguration:
+        Status: Enabled
+       
+  mywebbucketcom:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: mywebbucketforuru.com
+      OwnershipControls:
+                Rules:
+                - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  FrontendCodeBuild:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Name: FrontendCodeBuild
+      Description: A Frontend CodeBuild for test
+      ServiceRole: !Ref CodeBuildRole
+      SourceVersion: !Ref BranchName
+      Source:
+        BuildSpec: !Sub mybuildspec.yml
+        Location: "https://github.com/urmilapurohit/test-cicd.git"
+        Type: GITHUB
+      Artifacts:
+        Location: !Ref ArtifactStoreS3Bucket
+        Name: "frontend-artifact.zip"
+        NamespaceType: NONE
+        OverrideArtifactName: true
+        Packaging: ZIP
+        Type: S3
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+      #EnvironmentVariables:
+      #- Name: varName
+      #  Type: varType
+      #  Value: varValue
+      TimeoutInMinutes: 10
+      Tags:
+        - Key: Key1
+          Value: Value1
+        - Key: Key2
+          Value: Value2
+
+  FrontendCodePipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties: 
+      Name: FrontendCodePipeline
+      RoleArn: !GetAtt CodePipelineRole.Arn 
+      ArtifactStore: 
+        Type: S3 
+        Location:
+          Ref: ArtifactStoreS3Bucket   
+      Stages: 
+        - 
+          Name: Source 
+          Actions: 
+            - 
+              Name: SourceAction
+              ActionTypeId: 
+                Category: Source 
+                Owner: AWS 
+                Version: 1 
+                Provider: S3 
+              OutputArtifacts: 
+                - 
+                  Name: FrontendSourceOutput 
+              Configuration: 
+                S3Bucket: 
+                  Ref: ArtifactStoreS3Bucket              #try
+                S3ObjectKey: "frontend-artifact.zip"
+                  #Ref: frontend-artifact.zip 
+              RunOrder: 1 
+        - 
+          Name: Deploy
+          Actions: 
+            - 
+              Name: Deploy
+              InputArtifacts: 
+                -
+                  Name: FrontendSourceOutput  
+              ActionTypeId: 
+                Category: Deploy 
+                Owner: AWS 
+                Version: 1 
+                Provider: S3
+              Configuration: 
+                BucketName: !Ref mywebbucketcom
+                Extract: true
+              RunOrder: 1 
